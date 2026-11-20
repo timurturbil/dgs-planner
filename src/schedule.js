@@ -112,20 +112,55 @@ function labelDgs(it, n, plan) {
 }
 
 const cache = new Map();
-const sig = { s: null, t: null };
+const sig = { s: null, t: null, f: null };
 
-// Bir günün programı (ayarlar/konular değişmedikçe önbellekten)
+// Bir günün programı (ayarlar/konular/sabit günler değişmedikçe önbellekten).
+// Sabitlenmiş (frozen) günler ayarlardan yeniden hesaplanmaz: görev kimlikleri
+// sıraya bağlı olduğu için, aksi halde ayar değişince geçmiş işaretler kayardı.
 export function buildDay(ds, st) {
-  if (sig.s !== st.settings || sig.t !== st.topics) {
+  if (sig.s !== st.settings || sig.t !== st.topics || sig.f !== st.frozen) {
     cache.clear();
     sig.s = st.settings;
     sig.t = st.topics;
+    sig.f = st.frozen;
   }
-  const key = ds;
-  if (cache.has(key)) return cache.get(key);
-  const res = _buildDay(ds, st);
-  cache.set(key, res);
+  if (cache.has(ds)) return cache.get(ds);
+  const snap = st.frozen?.[ds];
+  const res = snap ? { ...snap, tasks: snap.blocks.filter((b) => b.checkable), frozen: true } : _buildDay(ds, st);
+  cache.set(ds, res);
   return res;
+}
+
+// Sabit gün yok sayılarak, güncel ayarlarla hesaplanan program
+export const buildDayFresh = (ds, st) => _buildDay(ds, st);
+
+const snapOf = (d) => {
+  const { tasks, frozen, ...rest } = d;
+  return rest;
+};
+
+// Verilen günleri o anki halleriyle sabitler; değişiklik yoksa aynı nesneyi döndürür
+export function freezeDays(st, days) {
+  const add = days.filter((ds) => !st.frozen?.[ds]);
+  if (!add.length) return st.frozen;
+  const out = { ...st.frozen };
+  for (const ds of add.sort()) out[ds] = snapOf(buildDay(ds, st));
+  return out;
+}
+
+// Başlangıçtan düne kadar sabitlenmemiş günleri sabitler
+export function freezePast(st, today = todayStr()) {
+  const days = [];
+  for (let ds = st.settings.startDate; ds < today; ds = addDays(ds, 1)) days.push(ds);
+  return freezeDays(st, days);
+}
+
+// Sabit gün güncel ayarlardan farklı mı? (yeniden planlama önerisi için)
+export function isStale(ds, st) {
+  const snap = st.frozen?.[ds];
+  if (!snap) return false;
+  const key = (bs) => JSON.stringify(bs.map((b) => [b.start, b.end, b.kind, b.title]));
+  return key(snap.blocks) !== key(buildDayFresh(ds, st).blocks);
 }
 
 function _buildDay(ds, st) {

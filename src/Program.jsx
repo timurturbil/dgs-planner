@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DAY_LONG, DAY_SHORT, MONTHS, TOPIC } from './data.js';
-import { addDays, backlog, buildDay, daysBetween, fmt, mondayOf, parseDate, todayStr, weekDays, weekStats } from './schedule.js';
+import { addDays, backlog, buildDay, daysBetween, fmt, freezeDays, isStale, mondayOf, parseDate, todayStr, weekDays, weekStats } from './schedule.js';
 import { Block, Check, Icon, Ring, hours } from './ui.jsx';
 import WeekGrid from './WeekGrid.jsx';
 
@@ -37,14 +37,26 @@ export default function Program({ st, update }) {
   const left = daysBetween(today, st.settings.examDate);
   const p = day.plan;
 
+  // İşaretlenen günü sabitle: sonradan ayar değişse de işaret aynı göreve bağlı kalır
+  const dayOf = (id) => id.split('#')[0];
   const toggle = (id) =>
     update((s) => {
       const done = { ...s.done };
       if (done[id]) delete done[id];
       else done[id] = Date.now();
-      return { done };
+      return { done, frozen: freezeDays(s, [dayOf(id)]) };
     });
-  const skip = (id) => update((s) => ({ skipped: { ...s.skipped, [id]: true } }));
+  const skip = (id) => update((s) => ({ skipped: { ...s.skipped, [id]: true }, frozen: freezeDays(s, [dayOf(id)]) }));
+  const stale = sel >= today && isStale(sel, st);
+  const replan = () => {
+    if (!confirm('Bu gün güncel ayarlarla yeniden planlanacak. Bu günün işaretleri silinecek. Devam edilsin mi?')) return;
+    update((s) => {
+      const drop = (o) => Object.fromEntries(Object.entries(o).filter(([k]) => dayOf(k) !== sel));
+      const frozen = { ...s.frozen };
+      delete frozen[sel];
+      return { frozen, done: drop(s.done), skipped: drop(s.skipped) };
+    });
+  };
 
   const dayTasks = day.tasks;
   const dayDone = dayTasks.filter((t) => st.done[t.id]).length;
@@ -190,6 +202,14 @@ export default function Program({ st, update }) {
             </span>
           )}
         </div>
+        {stale && (
+          <div className="card stale">
+            <span className="small">Ayarların değişti; bu gün işaretlendiği için eski haliyle duruyor.</span>
+            <button className="link" onClick={replan}>
+              yeniden planla
+            </button>
+          </div>
+        )}
         <div className="marker">⏰ {fmt(day.wake)} Uyanış</div>
         {day.blocks.map((b, i) => (
           <Block key={i} b={b} now={nowMin} done={!!(b.id && st.done[b.id])} onToggle={() => toggle(b.id)} />

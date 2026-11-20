@@ -138,4 +138,5 @@ export const DEFAULT_STATE = {
   skipped: {}, // taskId -> true (kaydırılanlardan atlananlar)
   topics: {}, // topicId -> {status: 0|1|2, weak: bool}
   exams: [], // {id, date, say, soz}
+  frozen: {}, // tarih -> o günün sabitlenmiş programı (geçmiş ya da işaretlenmiş günler)
 };
