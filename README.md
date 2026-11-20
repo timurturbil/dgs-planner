@@ -8,5 +8,11 @@ npm run dev     # aynı Wi-Fi'deki telefondan da açılır
 npm run build
 ```
 
-Vercel: projeyi içe aktar → Framework "Vite" otomatik seçilir, ek ayar gerekmez.
+```bash
+npm test        # program motoru testleri
+```
+
+Yayın: `main`'e her push'ta GitHub Actions derleyip GitHub Pages'e yükler
+(`.github/workflows/pages.yml`) → https://timurturbil.github.io/dgs-planner/
+
 Telefonda: Safari ile aç → Paylaş → "Ana Ekrana Ekle".

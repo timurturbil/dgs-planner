@@ -1,7 +1,9 @@
-// Çevrimdışı çalışma: sayfa ağdan, yoksa önbellekten; dosyalar önbellekten
-const CACHE = 'dgs-plan-v1';
+// Çevrimdışı çalışma: sayfa ağdan, yoksa önbellekten; dosyalar önbellekten.
+// Site bir alt yolda yayınlanabilir (GitHub Pages: /dgs-planner/), yollar sw.js'in konumuna göre.
+const CACHE = 'dgs-plan-v2';
+const ROOT = new URL('./', self.location).href;
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest'])));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll([ROOT, ROOT + 'manifest.webmanifest'])));
   self.skipWaiting();
 });
 self.addEventListener('activate', (e) => {
@@ -9,15 +11,15 @@ self.addEventListener('activate', (e) => {
 });
 self.addEventListener('fetch', (e) => {
   const req = e.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+  if (req.method !== 'GET' || !req.url.startsWith(ROOT)) return;
   if (req.mode === 'navigate') {
     e.respondWith(
       fetch(req)
         .then((r) => {
-          caches.open(CACHE).then((c) => c.put('/', r.clone()));
+          if (r.ok) caches.open(CACHE).then((c) => c.put(ROOT, r.clone()));
           return r;
         })
-        .catch(() => caches.match('/')),
+        .catch(() => caches.match(ROOT)),
     );
     return;
   }
