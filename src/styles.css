@@ -237,3 +237,36 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1
   .exam-form label:first-child { grid-column: span 2; }
   h1 { font-size: 26px; }
 }
+
+/* gün / hafta geçişi */
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--line); border-radius: 10px; padding: 3px; }
+.seg button { padding: 6px 0; border-radius: 8px; font-size: 13.5px; font-weight: 650; color: var(--muted); }
+.seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / 0.12); }
+.days[hidden] { display: none; }
+
+/* haftalık ızgara */
+.wg { display: flex; flex-direction: column; gap: 8px; }
+.wg-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
+.wg-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.wg-legend i { width: 9px; height: 9px; border-radius: 3px; background: var(--kc); }
+.wg-grid { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 4px 10px 0; }
+@media (max-width: 480px) { .wg-grid { margin: 0 -10px; } }
+.wg-row { display: grid; grid-template-columns: 22px repeat(7, minmax(0, 1fr)); column-gap: 2px; }
+.wg-head { padding-bottom: 6px; position: sticky; top: 0; background: var(--card); z-index: 2; border-radius: var(--radius) var(--radius) 0 0; }
+.wg-dh { display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
+.wg-dh span { font-size: 10.5px; color: var(--muted); font-weight: 600; }
+.wg-dh b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.wg-dh.today b { color: var(--accent); }
+.wg-body { position: relative; }
+.wg-hours { position: relative; }
+.wg-hours span { position: absolute; right: 3px; transform: translateY(-50%); font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.wg-col { position: relative; height: 100%; display: block; text-align: left; border-radius: 6px; }
+.wg-col.today { background: var(--accent-soft); }
+.wg-line { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--line); }
+.wg-b { position: absolute; left: 0; right: 0; border-radius: 4px; overflow: hidden; background: color-mix(in srgb, var(--kc) 22%, var(--card)); border-left: 2px solid var(--kc); padding: 1px 1px 1px 2px; }
+.wg-b span { display: block; font-size: 8.5px; letter-spacing: -0.01em; line-height: 1.15; font-weight: 600; overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; }
+.wg-b.k-commute, .wg-b.k-gap, .wg-b.k-meal, .wg-b.k-rest { background: color-mix(in srgb, var(--kc) 10%, var(--card)); }
+.wg-b.k-commute span, .wg-b.k-gap span, .wg-b.k-meal span, .wg-b.k-rest span { color: var(--muted); font-weight: 500; }
+.wg-b.done { opacity: 0.45; }
+.wg-now { position: absolute; left: -2px; right: -2px; border-top: 2px solid var(--k-deneme); z-index: 1; }
+.wg-hint { text-align: center; }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { DAY_LONG, DAY_SHORT, MONTHS, TOPIC } from './data.js';
 import { addDays, backlog, buildDay, daysBetween, fmt, mondayOf, parseDate, todayStr, weekDays, weekStats } from './schedule.js';
 import { Block, Check, Icon, Ring, hours } from './ui.jsx';
+import WeekGrid from './WeekGrid.jsx';
 
 const longDate = (ds) => {
   const d = parseDate(ds);
@@ -31,6 +32,7 @@ export default function Program({ st, update }) {
   const stats = useMemo(() => weekStats(mon, st), [mon, st]);
   const late = useMemo(() => (sel === today ? backlog(today, st) : []), [sel, today, st]);
   const [showLate, setShowLate] = useState(false);
+  const [view, setView] = useState('gun');
   const nowMin = sel === today ? nowD.getHours() * 60 + nowD.getMinutes() : sel < today ? 1e9 : null;
   const left = daysBetween(today, st.settings.examDate);
   const p = day.plan;
@@ -90,13 +92,27 @@ export default function Program({ st, update }) {
             <Icon name="right" />
           </button>
         </div>
-        <div className="days">
+        <div className="seg" role="tablist">
+          {[['gun', 'Gün'], ['hafta', 'Hafta']].map(([v, l]) => (
+            <button key={v} role="tab" aria-selected={view === v} className={view === v ? 'on' : ''} onClick={() => setView(v)}>
+              {l}
+            </button>
+          ))}
+        </div>
+        <div className="days" hidden={view === 'hafta'}>
           {weekDays(mon).map((ds, i) => {
             const d = buildDay(ds, st);
             const tot = d.tasks.length;
             const dn = d.tasks.filter((t) => st.done[t.id]).length;
             return (
-              <button key={ds} className={`day ${ds === sel ? 'sel' : ''} ${ds === today ? 'today' : ''}`} onClick={() => setSel(ds)}>
+              <button
+                key={ds}
+                className={`day ${ds === sel && view === 'gun' ? 'sel' : ''} ${ds === today ? 'today' : ''}`}
+                onClick={() => {
+                  setSel(ds);
+                  setView('gun');
+                }}
+              >
                 <span className="dn">{DAY_SHORT[i]}</span>
                 <span className="dd">{parseDate(ds).getDate()}</span>
                 <span className="dbar">
@@ -152,7 +168,20 @@ export default function Program({ st, update }) {
         </section>
       )}
 
-      <section className="timeline">
+      {view === 'hafta' && (
+        <WeekGrid
+          mon={mon}
+          st={st}
+          today={today}
+          nowMin={nowD.getHours() * 60 + nowD.getMinutes()}
+          onPick={(ds) => {
+            setSel(ds);
+            setView('gun');
+          }}
+        />
+      )}
+
+      {view === 'gun' && <section className="timeline">
         <div className="tl-head">
           <h2>{sel === today ? 'Günün akışı' : DAY_LONG[(parseDate(sel).getDay() + 6) % 7]}</h2>
           {dayTasks.length > 0 && (
@@ -166,7 +195,7 @@ export default function Program({ st, update }) {
           <Block key={i} b={b} now={nowMin} done={!!(b.id && st.done[b.id])} onToggle={() => toggle(b.id)} />
         ))}
         <div className="marker">🌙 {fmt(day.bed)} Uyku</div>
-      </section>
+      </section>}
     </div>
   );
 }
